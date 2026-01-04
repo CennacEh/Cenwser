@@ -1,8 +1,8 @@
 CXX = g++
 SDL_PATH = C:/Users/achto/Documents/CppProjects/Cenwser
 
-CXXFLAGS = -Wextra -Wall -Iinclude -Dmain=SDL_main -g
-LDFLAGS = -Llib -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf -mwindows -lcurl -g 
+CXXFLAGS = -Wextra -Wall -Dmain=SDL_main -g
+LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf -mwindows -lcurl -g 
 
 target = build/app.exe
 src = $(shell find src/ -name "*.cpp")
@@ -16,7 +16,6 @@ $(target): $(obj)
 build/%.o: src/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) -c $< $(CXXFLAGS) -o $@
-	cp ./bin/* ./build/
 	cp -r ./src/resources ./build/resources
 
 run:
