@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     TTF_Init();
     curl_global_init(CURL_GLOBAL_DEFAULT);
     FontsList.push_back(TTF_OpenFont(".\\resources\\arial.ttf", 24));
-    currentTab.url = "https://youtube.com"; 
+    currentTab.url = "https://example.com"; 
     currentTab.loaded = false;
     currentTab.html = "";
     ///////////////////
