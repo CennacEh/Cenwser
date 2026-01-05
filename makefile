@@ -16,7 +16,7 @@ $(target): $(obj)
 build/%.o: src/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) -c $< $(CXXFLAGS) -o $@
-	cp -r ./src/resources ./build/resources
+	cp -r ./src/resources ./build/
 
 run:
 	build/app.exe

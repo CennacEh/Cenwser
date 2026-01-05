@@ -1,7 +1,7 @@
-#include <stdio.h>
+#include <iostream>
 
-#include "gui.h"
 #include "../global.h"
+#include "gui.h"
 
 BWindow MainWindow;
 
@@ -12,6 +12,7 @@ Tab currentTab;
 Uint32 frameStart = 0;
 
 bool isTypingInBar = false;
+bool shouldExit = false;
 
 int width;
 int height;
@@ -29,25 +30,8 @@ BWindow InitWindow(int width, int height, const char* title) {
     return window;
 }
 
-bool WindowShouldClose(BWindow window) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        switch (event.type) {
-            case SDL_QUIT:
-                return true;
-                break;
-            case SDL_WINDOWEVENT:
-                if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
-                    if (event.window.windowID == SDL_GetWindowID(window.sdlWindow)) {
-                        return true;
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-    }
-    return false;
+bool WindowShouldClose() {
+    return shouldExit;
 }
 
 void UpdateCursor(SDL_SystemCursor to) {
@@ -63,13 +47,13 @@ SDL_Point GetMousePosition() {
 
 void DrawRectangle(BWindow window, int x, int y, int w, int h, int r, int g, int b, int a) {
     SDL_SetRenderDrawColor(window.sdlRenderer, r, g, b, a);
-    SDL_Rect rect = { x, y, h, w };
+    SDL_Rect rect = {x, y, h, w};
     SDL_RenderFillRect(window.sdlRenderer, &rect);
 }
 
 void DrawCircle(BWindow window, int cx, int cy, int radius, int r, int g, int b, int a) {
     SDL_SetRenderDrawColor(window.sdlRenderer, r, g, b, a);
-    const int NUM_SEGMENTS = 100; 
+    const int NUM_SEGMENTS = 100;
     float theta = 2 * M_PI / NUM_SEGMENTS;
     float tangential_factor = tan(theta);
     float radial_factor = cos(theta);
@@ -92,7 +76,7 @@ void DrawCircle(BWindow window, int cx, int cy, int radius, int r, int g, int b,
     }
 }
 
-//FULL CLEANUP (FOR FULL EXIT)
+// FULL CLEANUP (FOR FULL EXIT)
 bool CleanUp(BWindow windowToDestroy) {
     TTF_Quit();
     SDL_DestroyRenderer(windowToDestroy.sdlRenderer);
@@ -102,7 +86,7 @@ bool CleanUp(BWindow windowToDestroy) {
     return true;
 }
 
-//FOR GETTING RID OF A WINDOW
+// FOR GETTING RID OF A WINDOW
 void CleanBWindow(BWindow windowToClean) {
     SDL_DestroyRenderer(windowToClean.sdlRenderer);
     SDL_DestroyWindow(windowToClean.sdlWindow);
@@ -114,7 +98,7 @@ void UpdateBackground(Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
 }
 
 void DrawTextSDL(BWindow window, std::string text, int x, int y, Uint8 r, Uint8 g, Uint8 b, Uint8 a, TTF_Font* font) {
-    SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), { r, g, b, a });
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), {r, g, b, a});
     if (!surface) {
         return;
     }
@@ -124,7 +108,7 @@ void DrawTextSDL(BWindow window, std::string text, int x, int y, Uint8 r, Uint8 
         SDL_FreeSurface(surface);
         return;
     }
-    SDL_Rect loc = { x, y, surface->w, surface->h };
+    SDL_Rect loc = {x, y, surface->w, surface->h};
     SDL_RenderCopy(window.sdlRenderer, texture, nullptr, &loc);
 
     SDL_FreeSurface(surface);
@@ -132,10 +116,11 @@ void DrawTextSDL(BWindow window, std::string text, int x, int y, Uint8 r, Uint8 
 }
 
 void WaitFrames(int fps) {
-    if (frameStart == 0) { frameStart = SDL_GetTicks(); }
-    else {
+    if (frameStart == 0) {
+        frameStart = SDL_GetTicks();
+    } else {
         int frameTime = SDL_GetTicks() - frameStart;
-        if (1000/fps > frameTime) SDL_Delay(1000/fps - frameTime);
+        if (1000 / fps > frameTime) SDL_Delay(1000 / fps - frameTime);
         frameStart = SDL_GetTicks();
         frames++;
     }
@@ -143,24 +128,48 @@ void WaitFrames(int fps) {
 
 void RenderBar() {
     DrawRectangle(MainWindow, 0, 0, 50, width, 110, 110, 110, 255);
-    DrawRectangle(MainWindow, 10, 10, 30, width-20, 50, 50, 50, 255);
+    DrawRectangle(MainWindow, 10, 10, 30, width - 20, 50, 50, 50, 255);
+    SDL_Rect bar = { 10, 10, width - 20, 30 };
+    SDL_Point mousePos = GetMousePosition();
+    if (SDL_PointInRect(&mousePos, &bar)) UpdateCursor(SDL_SYSTEM_CURSOR_HAND);
+    else UpdateCursor(SDL_SYSTEM_CURSOR_ARROW);
     if (currentTab.loaded == false || isTypingInBar) {
         DrawTextSDL(MainWindow, currentTab.url, 15, 10, 240, 100, 100, 255, FontsList[0]);
-    } else DrawTextSDL(MainWindow, currentTab.url, 15, 10, 240, 240, 240, 255, FontsList[0]);
+    } else
+        DrawTextSDL(MainWindow, currentTab.url, 15, 10, 240, 240, 240, 255, FontsList[0]);
 }
 
-void HandleUrlTyping() {
-    SDL_Rect bar;
-    bar.x = 10;
-    bar.y = 10;
-    bar.h = 30;
-    bar.w = width-20;
+void HandleKeyPress(SDL_Event event) {
+    if (isTypingInBar == true) {
+        if (event.type == SDL_TEXTINPUT) currentTab.url += event.text.text;
+        else if (event.type == SDL_KEYDOWN) {
+            if (event.key.keysym.sym == SDLK_BACKSPACE && !currentTab.url.empty()) currentTab.url.pop_back();
+            else if (event.key.keysym.sym == SDLK_RETURN && isTypingInBar) {
+                isTypingInBar = false;
+                currentTab.loaded = false;
+            }
+        }
+    }
+}
+
+void HandleLeftClick(SDL_Event event) {
+    SDL_Rect bar = { 10, 10, width - 20, 30 };
     SDL_Point mousePos = GetMousePosition();
     if (SDL_PointInRect(&mousePos, &bar)) {
-        UpdateCursor(SDL_SYSTEM_CURSOR_HAND);
         isTypingInBar = true;
     } else {
-        UpdateCursor(SDL_SYSTEM_CURSOR_ARROW);
         isTypingInBar = false;
+    }
+}
+
+void HandleEvents() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        if (event.type == SDL_QUIT) shouldExit = true;
+        else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) {
+            if (event.window.windowID == SDL_GetWindowID(MainWindow.sdlWindow)) shouldExit = true;
+        } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            HandleLeftClick(event);
+        } else if (event.type == SDL_TEXTINPUT || event.type == SDL_KEYDOWN) HandleKeyPress(event);
     }
 }

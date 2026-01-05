@@ -26,13 +26,14 @@ extern BWindow MainWindow;
 extern SDL_Cursor* cursor;
 extern Tab currentTab;
 extern bool isTypingInBar;
+extern bool shouldExit;
 
 extern int width;
 extern int height;
 
 BWindow InitWindow(int height, int width, const char* title);
 bool CleanUp(BWindow windowToDestroy);
-bool WindowShouldClose(BWindow window);
+bool WindowShouldClose();
 void DrawRectangle(BWindow window, int x, int y, int w, int h, int r, int g, int b, int a);
 void UpdateCursor(SDL_SystemCursor to);
 void UpdateBackground(Uint8 r = 240, Uint8 g = 240, Uint8 b = 240, Uint8 a = 255);
@@ -40,4 +41,4 @@ void DrawTextSDL(BWindow window, std::string text, int x, int y, Uint8 r = 0, Ui
 void WaitFrames(int fps = 60);
 void RenderBar();
 void CleanBWindow(BWindow windowToClean);
-void HandleUrlTyping();
+void HandleEvents();

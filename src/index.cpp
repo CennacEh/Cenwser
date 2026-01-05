@@ -5,7 +5,6 @@
 #include "global.h"
 #include "other/other.h"
 
-bool shouldExit = false;
 bool error = false;
 unsigned int frames = 0;
 
@@ -14,17 +13,17 @@ int main(int argc, char* argv[]) {
     MainWindow = InitWindow(1024, 512, "Cenwser");
     TTF_Init();
     curl_global_init(CURL_GLOBAL_DEFAULT);
-    FontsList.push_back(TTF_OpenFont("C:\\Windows\\Fonts\\arial.ttf", 24));
+    FontsList.push_back(TTF_OpenFont(".\\resources\\arial.ttf", 24));
     currentTab.url = "https://youtube.com"; 
     currentTab.loaded = false;
     currentTab.html = "";
     ///////////////////
-    while (WindowShouldClose(MainWindow) == false) {
-        if (shouldExit) break;
+    while (WindowShouldClose() == false) {
         if (error == true) {
             CleanBWindow(MainWindow);
             continue;
         }
+        HandleEvents();
         //Updating variables
         SDL_GetWindowSize(MainWindow.sdlWindow, &width, &height);
         ////////////////////
@@ -39,7 +38,6 @@ int main(int argc, char* argv[]) {
         }
         DrawTextSDL(MainWindow, currentTab.html, 5, 50, 10, 10, 10, 255, FontsList[0]);
         RenderBar();
-        HandleUrlTyping();
         SDL_RenderPresent(MainWindow.sdlRenderer);
         WaitFrames(60);
     };
