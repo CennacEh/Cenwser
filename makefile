@@ -1,5 +1,4 @@
 CXX = g++
-SDL_PATH = C:/Users/achto/Documents/CppProjects/Cenwser
 
 CXXFLAGS = -Wextra -Wall -Dmain=SDL_main -g
 LDFLAGS = -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf -mwindows -lcurl -g 
